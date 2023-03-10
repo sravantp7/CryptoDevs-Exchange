@@ -32,6 +32,7 @@ contract Exchange is ERC20 {
         uint256 ethBalance = address(this).balance;
         uint liquidity;
 
+        // initial case
         if (cryptoDevTokenReserve == 0) {
             cryptoDevToken.transferFrom(
                 msg.sender,
@@ -63,5 +64,50 @@ contract Exchange is ERC20 {
             _mint(msg.sender, liquidity);
         }
         return liquidity;
+    }
+
+    /**
+     * When removing liquidity user will get ETH and CryptoDev Token.
+     * This function returns the amount of both of these.
+     */
+    function removeLiquidity(
+        uint256 _lpTokenAmt
+    ) public returns (uint256, uint256) {
+        require(_lpTokenAmt > 0, "LP Token amount should be greater than zero");
+        uint256 ethReserve = address(this).balance;
+        uint256 lpTokenSupply = totalSupply();
+
+        /**
+         *The amount of Eth that would be sent back to the user is based on a ratio
+          Ratio is -> (Eth sent back to the user) / (current Eth reserve)
+            = (amount of LP tokens that user wants to withdraw) / (total supply of LP tokens)
+          Then by some maths -> (Eth sent back to the user)
+            = (current Eth reserve * amount of LP tokens that user wants to withdraw) / (total supply of LP tokens)
+         */
+
+        uint256 ethAmtToUser = (ethReserve * _lpTokenAmt) / lpTokenSupply;
+
+        /**
+         *The amount of Crypto Dev token that would be sent back to the user is based on a ratio
+          Ratio is -> (Crypto Dev sent back to the user) / (current Crypto Dev token reserve)
+            = (amount of LP tokens that user wants to withdraw) / (total supply of LP tokens)
+          Then by some maths -> (Crypto Dev sent back to the user)
+            = (current Crypto Dev token reserve * amount of LP tokens that user wants to withdraw) / (total supply of LP tokens)
+         */
+
+        uint256 cryptoDevTokenAmtToUser = (getReserve() * _lpTokenAmt) /
+            lpTokenSupply;
+
+        // buring lp token
+        _burn(msg.sender, _lpTokenAmt);
+
+        // Transfering eth to user
+        (bool sent, ) = payable(msg.sender).call{value: ethAmtToUser}("");
+        require(sent, "Transaction Failed");
+
+        // Transfering CryptoDev Token
+        cryptoDevToken.transfer(msg.sender, cryptoDevTokenAmtToUser);
+
+        return (ethAmtToUser, cryptoDevTokenAmtToUser);
     }
 }
