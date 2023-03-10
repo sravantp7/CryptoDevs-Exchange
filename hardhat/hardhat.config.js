@@ -7,9 +7,9 @@ const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-    defaultNetwork: "goerli",
+    defaultNetwork: "sepolia",
     networks: {
-        goerli: {
+        sepolia: {
             url: SEPOLIA_RPC_URL,
             accounts: [ACCOUNT_PRIVATE_KEY],
         },
