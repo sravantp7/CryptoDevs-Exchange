@@ -110,4 +110,54 @@ contract Exchange is ERC20 {
 
         return (ethAmtToUser, cryptoDevTokenAmtToUser);
     }
+
+    /**
+     * @dev Returns the amount Eth/Crypto Dev tokens that would be returned to the user in the swap
+     */
+    function getAmountOfTokens(
+        uint256 inputAmount,
+        uint256 inputReserve,
+        uint256 outputReserve
+    ) public pure returns (uint256) {
+        require(inputReserve > 0 && outputReserve > 0, "Invalid Reserve");
+
+        // We are applying a fee of 1% during swap
+        // Input amount with fee = (input amount - (1*(input amount)/100)) = ((input amount)*99)/100
+        // In the above formula, if 1 want to swap for 1 ETH , we will find 1% of 1 ETH and subtract it
+        // from input given, and apply swap with this new value. Ie for 1 eth sent by the user we do swap for
+        // only 0.99 ETH
+
+        uint256 inputAmountAfterFees = inputAmount * 99; // here / 100 will be applied below formula
+
+        // We need to make sure (x + Δx) * (y - Δy) = x * y
+        // So the final formula is Δy = (y * Δx) / (x + Δx)
+
+        uint256 numerator = outputReserve * inputAmountAfterFees;
+        uint256 denominator = (inputReserve * 100) + inputAmountAfterFees;
+
+        return numerator / denominator;
+    }
+
+    /**
+     * @dev Swaps Eth for CryptoDev Tokens
+     */
+    function ethToCryptoDevToken(uint256 _minToken) public payable {
+        uint256 tokenReserve = getReserve();
+        uint256 inputAmount = msg.value;
+        uint256 ethReserve = address(this).balance - inputAmount;
+
+        uint256 tokensBought = getAmountOfTokens(
+            inputAmount,
+            ethReserve,
+            tokenReserve
+        );
+
+        require(
+            tokensBought >= _minToken,
+            "Insufficient Amount of Token Bought"
+        );
+
+        // Transfer the `Crypto Dev` tokens to the user
+        cryptoDevToken.transfer(msg.sender, tokensBought);
+    }
 }
