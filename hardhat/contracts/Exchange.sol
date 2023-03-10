@@ -160,4 +160,30 @@ contract Exchange is ERC20 {
         // Transfer the `Crypto Dev` tokens to the user
         cryptoDevToken.transfer(msg.sender, tokensBought);
     }
+
+    /**
+     * @dev Swaps CryptoDev Tokens for Eth
+     */
+    function cryptoDevTokenToEth(
+        uint256 _tokenSwapAmt,
+        uint256 _minEth
+    ) public {
+        uint256 tokenReserve = getReserve();
+        uint256 ethReserve = address(this).balance;
+
+        uint256 ethBought = getAmountOfTokens(
+            _tokenSwapAmt,
+            tokenReserve,
+            ethReserve
+        );
+
+        require(ethBought >= _minEth, "insufficient output amount");
+
+        // Transfer `Crypto Dev` tokens from the user's address to the contract
+        cryptoDevToken.transferFrom(msg.sender, address(this), _tokenSwapAmt);
+
+        // Sending ether to user
+        (bool sent, ) = payable(msg.sender).call{value: ethBought}("");
+        require(sent, "Transaction Failed");
+    }
 }
