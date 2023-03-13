@@ -177,6 +177,24 @@ export default function Home() {
     }
   }
 
+  async function _swapTokens() {
+    try {
+      const swapAmountWei = ethers.utils.parseEther(swapAmount);
+      if (!swapAmountWei.eq(zero)) {
+        const signer = await connectWallet();
+        setLoading(true);
+        await swapTokens(signer, swapAmountWei, ethers.utils.parseEther(tokenToBeReceivedAfterSwap), ethSelected);
+        setLoading(false);
+        await getAmounts(signer);
+        setSwapAmount("0");
+      }
+    } catch (error) {
+      console.log(error.message);
+      setLoading(false);
+      setSwapAmount("0");
+    }
+  }
+
   function renderButton() {
     if (loading) {
       return <button className={styles.button}>Loading...</button>;
@@ -285,9 +303,9 @@ export default function Home() {
                   tokenToBeReceivedAfterSwap
                 } Eth`}
           </div>
-          {/* <button className={styles.button1} onClick={_swapTokens}>
+          <button className={styles.button1} onClick={_swapTokens}>
             Swap
-          </button> */}
+          </button>
         </div>
       )
     }
