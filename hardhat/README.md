@@ -1,13 +1,10 @@
-# Sample Hardhat Project
+# Decentralized Exchange
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+<p>This Exchange will allow user to swap ether|CryptoDevs Token, provide liquidity to pool and remove liquidity.</p>
+<p>A fee of 1% will be collected on each swap</p>
 
-Try running some of the following tasks:
+## Commands
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
+```
+yarn hardhat run scripts/deploy.js --network goerli
 ```

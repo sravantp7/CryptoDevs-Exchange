@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat")
 
-// Exchange Contract Address(goerli) :
+// Exchange Contract Address(goerli) : 0x967aa03eEf2Fe52E2bB3d356892a3280368fB298
 
 const CRYPTO_DEV_TOKEN_CONTRACT_ADDRESS =
     "0x27598FfF1F7a70660bc00daaD8740022beB66119"
