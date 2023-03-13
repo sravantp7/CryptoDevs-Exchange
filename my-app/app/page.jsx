@@ -33,6 +33,10 @@ export default function Home() {
   const [removeLPTokens, setRemoveLPTokens] = useState("0");
   const [removeEther, setRemoveEther] = useState("0");
   const [removeCD, setRemoveCD] = useState("0");
+  const [swapAmount, setSwapAmount] = useState("0");
+  const [tokenToBeReceivedAfterSwap, settokenToBeReceivedAfterSwap] =
+  useState("0");
+  const [ethSelected, setEthSelected] = useState(true);
   
 
   const connectWallet = async () => {
@@ -150,6 +154,29 @@ export default function Home() {
     }
   }
 
+  async function _getAmountOfTokensReceivedFromSwap (_swapAmount) {
+    try {
+      const swapAmountWei = ethers.utils.parseEther(_swapAmount.toString());
+      if (!swapAmountWei.eq(zero)) {
+        const signer = await connectWallet();
+        const provider = signer.provider;
+        const _ethBalance = await getEtherBalance(provider, null, true);
+        const amountOfTokens = await getAmountOfTokensReceivedFromSwap(
+          provider,
+          swapAmountWei,
+          ethSelected,
+          _ethBalance,
+          ethers.utils.parseEther(reservedCD)
+        );
+        settokenToBeReceivedAfterSwap(ethers.utils.formatEther(amountOfTokens.toString()));
+      } else {
+        settokenToBeReceivedAfterSwap("0");
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
   function renderButton() {
     if (loading) {
       return <button className={styles.button}>Loading...</button>;
@@ -223,6 +250,45 @@ export default function Home() {
           </div>
         </div>
 
+      )
+    } else {
+      return (
+        <div>
+          <input
+            type="number"
+            placeholder="Amount"
+            onChange={async (e) => {
+              setSwapAmount(e.target.value || "0");
+              await _getAmountOfTokensReceivedFromSwap(e.target.value || "0");
+            }}
+            className={styles.input}
+          />
+          <select
+            className={styles.select}
+            name="dropdown"
+            id="dropdown"
+            onChange={async () => {
+              setEthSelected(!ethSelected);
+              await _getAmountOfTokensReceivedFromSwap("0");
+              setSwapAmount("0");
+            }}
+          >
+            <option value="eth">Ethereum</option>
+            <option value="cryptoDevToken">Crypto Dev Token</option>
+          </select>
+          <div className={styles.inputDiv}>
+            {ethSelected
+              ? `You will get ${
+                  tokenToBeReceivedAfterSwap
+                } Crypto Dev Tokens`
+              : `You will get ${
+                  tokenToBeReceivedAfterSwap
+                } Eth`}
+          </div>
+          {/* <button className={styles.button1} onClick={_swapTokens}>
+            Swap
+          </button> */}
+        </div>
       )
     }
   }
