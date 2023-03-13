@@ -22,12 +22,15 @@ export default function Home() {
   const [ethBalance, setEtherBalance] = useState("0");
   const [cdBalance, setCDBalance] = useState("0");
   const [addCDTokens, setAddCDTokens] = useState("0");
+  const [addEther, setAddEther] = useState("0");
   const [lpBalance, setLPBalance] = useState("0");
   const [reservedCD, setReservedCD] = useState("0");
   const [etherBalanceContract, setEtherBalanceContract] = useState("0");
   const [display, setDisplay] = useState(false);
-
+  const [liquidityTab, setLiquidityTab] = useState(true);
+  const zero = ethers.BigNumber.from(0);
   const web3modalRef = useRef();
+  
 
   const connectWallet = async () => {
     try {
@@ -83,6 +86,68 @@ export default function Home() {
     }
   };
 
+  async function _addLiquidity () {
+    try {
+      const addEtherWei = ethers.utils.parseEther(addEther.toString());
+      const addCDToken = ethers.utils.parseEther(addCDTokens.toString());
+
+      if (!addEtherWei.eq(zero) && !addCDToken.eq(zero)) {
+        const signer = await connectWallet();
+        setLoading(true);
+        await addLiquidity(signer, addCDToken, addEtherWei);
+        setLoading(false);
+        setAddCDTokens("0");
+        await getAmounts(signer);
+      } else {
+        setAddCDTokens("0");
+        window.alert("You need to add both values");
+      }
+    } catch (error) {
+      console.log(error.message);
+      setLoading(false);
+      setAddCDTokens("0");
+    }
+  }
+
+  function renderButton() {
+    if (loading) {
+      return <button className={styles.button}>Loading...</button>;
+    }
+
+    if (liquidityTab) {
+      return (
+        <div>
+          <div>
+            {reservedCD == "0.0" ? (
+              <div>
+                <input
+                  type="number"
+                  placeholder="Amount of Ether"
+                  onChange={(e) => setAddEther(e.target.value || "0")}
+                  className={styles.input}
+                />
+                <input
+                  type="number"
+                  placeholder="Amount of CryptoDev tokens"
+                  onChange={(e) =>
+                    setAddCDTokens(e.target.value || "0")
+                  }
+                  className={styles.input}
+                />
+                <button className={styles.button1} onClick={_addLiquidity}>
+                  Add
+                </button>
+              </div>
+            ) : (<div>
+              hello
+            </div>)}
+          </div>
+        </div>
+
+      )
+    }
+  }
+
   useEffect(() => {
     web3modalRef.current = new Web3Modal({
       providerOptions: {},
@@ -131,6 +196,7 @@ export default function Home() {
               </button>
             </div>
           ) : null}
+          {walletConnected && renderButton()}
         </div>
       </div>
 

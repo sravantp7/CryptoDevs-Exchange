@@ -24,7 +24,7 @@ async function addLiquidity(signer, addCDAmountWei, addEtherAmountWei) {
     await tx.wait();
 
     const txn = await exchangeContract.addLiquidity(addCDAmountWei.toString(), {
-      value: addCDAmountWei,
+      value: addEtherAmountWei,
     });
     await txn.wait();
   } catch (error) {
