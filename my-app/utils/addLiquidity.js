@@ -39,9 +39,11 @@ async function calculateCD(
 ) {
   try {
     const addEtherWei = ethers.utils.parseEther(_addEther);
-
-    const cdTokenNeeded =
-      CDTokenReserve.mul(addEtherWei).div(contractETHBalance);
+    const _contractETHBalance = ethers.utils.parseEther(contractETHBalance);
+    const _CDTokenReserve = ethers.utils.parseEther(CDTokenReserve);
+    const cdTokenNeeded = _CDTokenReserve
+      .mul(addEtherWei)
+      .div(_contractETHBalance);
 
     return cdTokenNeeded;
   } catch (error) {

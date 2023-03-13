@@ -30,6 +30,9 @@ export default function Home() {
   const [liquidityTab, setLiquidityTab] = useState(true);
   const zero = ethers.BigNumber.from(0);
   const web3modalRef = useRef();
+  const [removeLPTokens, setRemoveLPTokens] = useState("0");
+  const [removeEther, setRemoveEther] = useState("0");
+  const [removeCD, setRemoveCD] = useState("0");
   
 
   const connectWallet = async () => {
@@ -109,6 +112,44 @@ export default function Home() {
     }
   }
 
+  async function _removeLiquidity() {
+    try {
+      const signer = await connectWallet();
+      const removeLPTokensWei = ethers.utils.parseEther(removeLPTokens);
+      setLoading(true);
+      await removeLiquidity(removeLPTokensWei, signer);
+      setLoading(false);
+      await getAmounts(signer);
+      setRemoveCD("0");
+      setRemoveEther("0");
+    } catch (error) {
+      console.log(error.message);
+      setLoading(false);
+      setRemoveCD("0");
+      setRemoveEther("0");
+    }
+  }
+
+  async function _getTokensAfterRemove(_removeLPTokens) {
+    try {
+      const signer = await connectWallet();
+      const provider = signer.provider
+      const removeLPTokenWei = ethers.utils.parseEther(_removeLPTokens);
+      const _ethBalance = await getEtherBalance(provider, null, true);
+      const cryptoDevTokenReserve = await getReserveOfCDTokens(provider);
+      const { _removeEther, _removeCD } = await getTokensAfterRemove(
+        provider,
+        removeLPTokenWei,
+        _ethBalance,
+        cryptoDevTokenReserve
+      );
+      setRemoveEther(ethers.utils.formatEther(_removeEther.toString()));
+      setRemoveCD(ethers.utils.formatEther(_removeCD.toString()));
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
   function renderButton() {
     if (loading) {
       return <button className={styles.button}>Loading...</button>;
@@ -139,8 +180,46 @@ export default function Home() {
                 </button>
               </div>
             ) : (<div>
-              hello
+                <input
+                  type="number"
+                  placeholder="Amount of Ether"
+                  onChange={async (e) => {
+                    setAddEther(e.target.value || "0");
+                    const _addCDTokens = await calculateCD(
+                      e.target.value || "0",
+                      etherBalanceContract,
+                      reservedCD
+                    );
+                    setAddCDTokens(ethers.utils.formatEther(_addCDTokens));
+                  }}
+                  className={styles.input}
+                />
+                <div className={styles.inputDiv}>
+                  <span>{`You will need ${addCDTokens} Crypto Dev
+                  Tokens`}</span>
+                </div>
+                <button className={styles.button1} onClick={_addLiquidity}>
+                  Add
+                </button>
             </div>)}
+            <div>
+              <input
+                type="number"
+                placeholder="Amount of LP Tokens"
+                onChange={async (e) => {
+                  setRemoveLPTokens(e.target.value || "0");
+                  await _getTokensAfterRemove(e.target.value || "0");
+                }}
+                className={styles.input}
+              />
+              <div className={styles.inputDiv}>
+              <span>{`You will need ${removeCD} Crypto Dev
+                  Tokens and ${removeEther} ETH` }</span>
+              </div>
+              <button className={styles.button1} onClick={_removeLiquidity}>
+                Remove
+              </button>
+            </div>
           </div>
         </div>
 
